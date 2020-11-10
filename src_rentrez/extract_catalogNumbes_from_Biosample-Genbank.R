@@ -44,5 +44,6 @@ biosample_identifiers<-file.path("https://www.ncbi.nlm.nih.gov/biosample",biosam
 
 # output table ------------------------------------------------------------
 
-tibble(catalogNumber=catalogNumbers,identifier=biosample_identifiers)
+tibble(catalogNumber=catalogNumbers,identifier=biosample_identifiers) %>% 
+  data.table::fwrite(file.path("../data/biosample_catalogNumbers.csv"))
 message(paste(length(catalogNumbers),"catalogNumbers got matched to a BioSample id"))
