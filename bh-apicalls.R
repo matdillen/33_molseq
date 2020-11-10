@@ -88,7 +88,7 @@ full_url = paste0(base_url, "result=sequence",
                          "sample_accession,",
                          "study_accession,",
                          "collected_by,",
-                         "collection_date",
+                         "collection_date,",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
@@ -110,7 +110,7 @@ full_url = paste0(base_url, "result=sequence",
                          "sample_accession,",
                          "study_accession,",
                          "collected_by,",
-                         "collection_date",
+                         "collection_date,",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
@@ -131,13 +131,32 @@ full_url = paste0(base_url, "result=sequence",
                          "sample_accession,",
                          "study_accession,",
                          "collected_by,",
-                         "collection_date",
+                         "collection_date,",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
 
 brdash = rjson
 write_tsv(rjson,"data/brdashset.txt",na="")
+
+full_url = paste0(base_url, "result=sequence",
+                  "&query=description=\"*BR)*\"",
+                  paste0("&fields=",
+                         "accession,",
+                         "country,",
+                         "location,",
+                         "description,",
+                         "scientific_name,",
+                         "bio_material,",
+                         "culture_collection,",
+                         "specimen_voucher,",
+                         "sample_accession,",
+                         "study_accession,",
+                         "collected_by,",
+                         "collection_date,",
+                         "tax_id,",
+                         "identified_by"),
+                  "&limit=0&format=json")
 
 #missing fields in some queries:
 brmeise2 = select(brmeise,-tax_id,-identified_by)
