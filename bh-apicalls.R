@@ -27,6 +27,15 @@ full_url = paste0(base_url, "result=sequence",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
+querna <- function(url) {
+  full_url <- URLencode(url)
+  ena_r = GET(full_url)
+  rcontent = content(ena_r,
+                     as="text")
+  rjson = fromJSON(rcontent,
+                   flatten=T)
+  return(rjson)
+}
 
 full_url <- URLencode(full_url)
 
@@ -71,8 +80,8 @@ full_url = paste0(base_url, "result=sequence",
                          "identified_by"),
                   "&limit=0&format=json")
 
-brmeise = rjson
-write_tsv(rjson,"data/brmeiseset.txt",na="")
+brmeise = querna(full_url)
+write_tsv(brmeise,"data/brmeiseset.txt",na="")
 
 full_url = paste0(base_url, "result=sequence",
                   "&query=specimen_voucher=\"*BR)*\"",
@@ -93,8 +102,8 @@ full_url = paste0(base_url, "result=sequence",
                          "identified_by"),
                   "&limit=0&format=json")
 
-brcard = rjson
-write_tsv(rjson,"data/brcard.txt",na="")
+brcard = querna(full_url)
+write_tsv(brcard,"data/brcard.txt",na="")
 
 full_url = paste0(base_url, "result=sequence",
                   "&query=specimen_voucher=\"*BR:*\"",
@@ -114,8 +123,8 @@ full_url = paste0(base_url, "result=sequence",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
-brcolon = rjson
-write_tsv(rjson,"data/brcolonset.txt",na="")
+brcolon = querna(full_url)
+write_tsv(brcolon,"data/brcolonset.txt",na="")
 
 full_url = paste0(base_url, "result=sequence",
                   "&query=specimen_voucher=\"*BR-*\"",
@@ -136,11 +145,32 @@ full_url = paste0(base_url, "result=sequence",
                          "identified_by"),
                   "&limit=0&format=json")
 
-brdash = rjson
-write_tsv(rjson,"data/brdashset.txt",na="")
+brdash = querna(full_url)
+write_tsv(brdash,"data/brdashset.txt",na="")
+
+#don't run
+#many genes give false positives
+# full_url = paste0(base_url, "result=sequence",
+#                   "&query=description=\"*BR)*\"",
+#                   paste0("&fields=",
+#                          "accession,",
+#                          "country,",
+#                          "location,",
+#                          "description,",
+#                          "scientific_name,",
+#                          "bio_material,",
+#                          "culture_collection,",
+#                          "specimen_voucher,",
+#                          "sample_accession,",
+#                          "study_accession,",
+#                          "collected_by,",
+#                          "collection_date,",
+#                          "tax_id,",
+#                          "identified_by"),
+#                   "&limit=0&format=json")
 
 full_url = paste0(base_url, "result=sequence",
-                  "&query=description=\"*BR)*\"",
+                  "&query=specimen_voucher=\"*BR0000*\"",
                   paste0("&fields=",
                          "accession,",
                          "country,",
@@ -157,13 +187,56 @@ full_url = paste0(base_url, "result=sequence",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
+br0 = querna(full_url)
+
+#not run
+#regex doesn't work
+# full_url = paste0(base_url, "result=sequence",
+#                   "&query=specimen_voucher=\"BR[0-9]{13}\"",
+#                   paste0("&fields=",
+#                          "accession,",
+#                          "country,",
+#                          "location,",
+#                          "description,",
+#                          "scientific_name,",
+#                          "bio_material,",
+#                          "culture_collection,",
+#                          "specimen_voucher,",
+#                          "sample_accession,",
+#                          "study_accession,",
+#                          "collected_by,",
+#                          "collection_date,",
+#                          "tax_id,",
+#                          "identified_by"),
+#                   "&limit=0&format=json")
+#brre = querna(full_url)
+
+#
+#samples: very few
+# full_url = paste0(base_url, "result=sample",
+#                   "&query=specimen_voucher=\"*BR)*\"",
+#                   paste0("&fields=",
+#                          "accession,",
+#                          "country,",
+#                          "location,",
+#                          "description,",
+#                          "bio_material,",
+#                          "culture_collection,",
+#                          "specimen_voucher,",
+#                          "sample_accession,",
+#                          "collected_by,",
+#                          "collection_date,",
+#                          "identified_by"),
+#                   "&limit=0&format=json")
+# brs0 = querna(full_url)
 
 #missing fields in some queries:
-brmeise2 = select(brmeise,-tax_id,-identified_by)
 
-br = rbind(brmeise2,brcard)
+br = rbind(brmeise,brcard)
 br = rbind(br,brcolon)
 br = rbind(br,brdash)
+br = rbind(br,br0)
+
 br = filter(br,!duplicated(accession))
 
 write_tsv(br,"data/brpossibles.txt",na="")
