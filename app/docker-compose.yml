@@ -13,6 +13,8 @@ services:
     command: python /code/molseq/manage.py runserver 0.0.0.0:80
     volumes:
       - .:/code
+    env_file:
+      - ./dev.env
     ports:
       - "80:80"
     depends_on:
