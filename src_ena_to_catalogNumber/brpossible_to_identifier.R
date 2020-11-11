@@ -2,7 +2,7 @@ library(tidyverse)
 library(data.table)
 
 brpossibles<-fread(file.path("../data/brpossibles.txt"))
-gbif_export<-fread(file.path("../data","0107125-200613084148143.csv"),encoding = "UTF-8")
+gbif_export<-fread(file.path("../33_molseq","data","0107125-200613084148143.csv"),encoding = "UTF-8")
 botcol_export<-fread(file.path("../data","herbarium_export_20201110022328.txt"),encoding="UTF-8")
 # any(across(all_of(names(brpossibles)),stringi::stri_detect_regex("BR[0-9]+")))
 
