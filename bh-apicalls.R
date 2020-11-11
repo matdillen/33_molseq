@@ -4,10 +4,21 @@ library(httr)
 library(urltools)
 library(rentrez)
 
-#ena
-
 base_url = "https://www.ebi.ac.uk/ena/portal/api/search?"
 
+querna <- function(url) {
+  full_url <- URLencode(url)
+  ena_r = GET(full_url)
+  rcontent = content(ena_r,
+                     as="text")
+  rjson = fromJSON(rcontent,
+                   flatten=T)
+  return(rjson)
+}
+
+#ena
+
+#niki's example request
 full_url = paste0(base_url, "result=sequence",
                   "&query=collection_date>=2015-01-01 AND collection_date<=2019-12-31",
                   #"&query=specimen_voucher=\"*meise*\"",
@@ -27,27 +38,38 @@ full_url = paste0(base_url, "result=sequence",
                          "tax_id,",
                          "identified_by"),
                   "&limit=0&format=json")
-querna <- function(url) {
-  full_url <- URLencode(url)
-  ena_r = GET(full_url)
-  rcontent = content(ena_r,
-                     as="text")
-  rjson = fromJSON(rcontent,
-                   flatten=T)
-  return(rjson)
-}
+
+#find all records with a b (big content)
+full_url = paste0(base_url, "result=sequence",
+                  "&query=specimen_voucher=\"*b*\"",
+                  paste0("&fields=",
+                         "accession,",
+                         "country,",
+                         "location,",
+                         "description,",
+                         "scientific_name,",
+                         "bio_material,",
+                         "culture_collection,",
+                         "specimen_voucher,",
+                         "sample_accession,",
+                         "study_accession,",
+                         "collected_by,",
+                         "collection_date,",
+                         "tax_id,",
+                         "identified_by"),
+                  "&limit=0&format=json")
 
 full_url <- URLencode(full_url)
 
 ena_r = GET(full_url)
 
 rcontent = content(ena_r,
-                   as="text")
+                   as="raw")
+
+rcontent= rawToChar(rcontent)
 
 rjson = fromJSON(rcontent,
                  flatten=T)
-
-#bigset = rjson
 
 #see frequency of empty fields
 #use this on bigset for an overview (otherwise not used)
@@ -213,24 +235,25 @@ br0 = querna(full_url)
 
 #
 #samples: very few
-# full_url = paste0(base_url, "result=sample",
-#                   "&query=specimen_voucher=\"*BR)*\"",
-#                   paste0("&fields=",
-#                          "accession,",
-#                          "country,",
-#                          "location,",
-#                          "description,",
-#                          "bio_material,",
-#                          "culture_collection,",
-#                          "specimen_voucher,",
-#                          "sample_accession,",
-#                          "collected_by,",
-#                          "collection_date,",
-#                          "identified_by"),
-#                   "&limit=0&format=json")
-# brs0 = querna(full_url)
+full_url = paste0(base_url, "result=sample",
+                  "&query=center_name=\"*br*\"",
+                  paste0("&fields=",
+                         "accession,",
+                         "country,",
+                         "location,",
+                         "description,",
+                         "bio_material,",
+                         "culture_collection,",
+                         "specimen_voucher,",
+                         "sample_accession,",
+                         "collected_by,",
+                         "collection_date,",
+                         "identified_by,",
+                         "center_name"),
+                  "&limit=0&format=json")
+brs = querna(full_url)
 
-#missing fields in some queries:
+#old approach: multiple queries join
 
 br = rbind(brmeise,brcard)
 br = rbind(br,brcolon)
@@ -240,6 +263,27 @@ br = rbind(br,br0)
 br = filter(br,!duplicated(accession))
 
 write_tsv(br,"data/brpossibles.txt",na="")
+
+#new approach: mine big set of b query
+br2 = b %>%
+  mutate(specimen_voucher2 = tolower(specimen_voucher)) %>%
+  filter(grepl(paste("br\\)",
+                     "br[0-9]{13}",
+                     "br:",
+                     "br<",
+                     "br-",
+                     "br [0-9]{13}",
+                     "meise",
+                     "gard.*belg",
+                     sep="|"),
+               specimen_voucher2)) %>%
+  select(-specimen_voucher2)
+
+#will omit a few meise with no b
+br2n = filter(br2,!accession%in%br$accession)
+br3 = rbind(br,br2n)
+
+write_tsv(br3,"brpossibles.txt",na="")
 
 #genbank
 
