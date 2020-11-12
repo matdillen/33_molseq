@@ -31,7 +31,7 @@ class paperParser():
         self.token = list(set(self.token))
         self,sent_token = nltk.sent_tokenize(self.text)
 
-    def search_accession_org(self):
+    def search_accession_org(self,label_to_look_for:str="ORGANIZATION"):
         """
         Search accession source using part of speech.
         """
