@@ -51,3 +51,4 @@ tqdm==4.51.0
 urllib3==1.25.11
 Werkzeug==1.0.1
 wikidataintegrator==0.8.0
+pdfminer.six==20201018
