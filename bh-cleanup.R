@@ -74,6 +74,16 @@ brf$recordedByID = gsub("^\\|",
                                  brf$recordedByID)
 
 
-#still need to add ids and other name info from the table
+for (i in 1:dim(brf)[1]) {
+  nums = strsplit(brf$nums[i],split="\\|")[[1]]
+  nums = gsub("[^0-9]","",nums)
+  brf$numbers[i] = paste(nums,collapse="|")
+}
 
 write_tsv(brf,"brpos-collids.txt",na="")
+
+dwc = read_tsv("occurrence.txt",col_types = cols(.default = "c"))
+
+brf2 = brf %>%
+  separate_rows(numbers,sep="\\|")
+
