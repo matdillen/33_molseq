@@ -1,8 +1,16 @@
 from django.shortcuts import render
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
+from .models import MatchingRun
 
 
-def index(request):
-    return render(request, 'web/index.html', {})
+class MatchingRunListView(ListView):
+    model = MatchingRun
+    queryset = MatchingRun.objects.all().values('id', 'ena_query', 'gbif_query', 'created')
+
+
+class MatchingRunDetailView(DetailView):
+    model = MatchingRun
 
 
 def detail(request, run_id):
