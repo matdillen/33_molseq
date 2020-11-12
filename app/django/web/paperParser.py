@@ -3,10 +3,11 @@ from pdfminer.high_level import extract_text
 import nltk
 from nltk.tokenize import RegexpTokenizer
 
-# move this to app initialization?
+
+# FIXME: #download nltk resource at app initialization
 # nltk.download('popular') # download nltk resource
 
-class paperParser():
+class paperParser:
     # potential patterns of accessions
     grep_accession = re.compile(r"^[A-Z]+\d+")  #  anything like an acession
     grep_numbers = re.compile(r"^\d{5,}$")  # 5 or more digits, to avoid matching year
