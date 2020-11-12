@@ -16,6 +16,7 @@ class MatchingRun(models.Model):
     created = models.DateField(auto_now_add=True)
 
     # These two will contain a list like [{enaID1: [gbifID1, gbifID2}, {enaID2: [gbifID3]}]
+    # The validated_matches will be a data export for Francisco/nsidr.org
     validated_matches = models.JSONField(null=True, blank=True)
     suggested_matches = models.JSONField(null=True, blank=True)
 
