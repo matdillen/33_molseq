@@ -1,9 +1,11 @@
 # library(microbenchmark)
 library(tidyverse)
 library(data.table)
+library(stringdist)
+
 gbif_export<-fread(file.path("../33_molseq","data","0107125-200613084148143.csv"),encoding = "UTF-8")
 ENA_big<-fread("6M_ENA_specimen_vouchers.csv",select=c("specimen_voucher","accession"),na.strings = "")
-ENA_big_all<-fread("6M_ENA_specimen_vouchers.csv",na.strings = "")
+ENA_big_all<-fread("6M_ENA_specimen_vouchers.csv",na.strings = "") %>% mutate_all(list(~na_if(.,"")))
 
 # create visualistation of available data ---------------------------------
 
@@ -14,9 +16,9 @@ ENA_big_all[sample(.N, 100000)] %>%
     "scientific_name",
     # "specimen_voucher",
     "tax_id"
-  )) %>% 
-  mutate_all(list(~na_if(.,""))) %>%
-  visdat::vis_dat(warn_large_data = F)
+  )) 
+  # %>% mutate_all(list(~na_if(.,""))) 
+  %>% visdat::vis_dat(warn_large_data = F)
 
 
 # closer look at the date field, because vis_guess does not do Date types, but
@@ -27,7 +29,13 @@ ENA_big_all[sample(.N, 100000)] %>%
     )) %>% mutate_all(list(~na_if(.,""))) %>% 
 visdat::vis_guess(palette = "cb_safe")
 
-ENA_date<-ENA_big_all[sample(.N,100000)][,.("collection_date")]
+determine_type <- function(input_object) {
+  readr::guess_parser(input_object)
+}
+
+ENA_date<-ENA_big_all[sample(.N,100000)][,.(collection_date)][,type:=map_chr(collection_date,determine_type)]
+ENA_date %>% group_by(type) %>% arrange() %>% visdat::vis_dat()
+
 
 # extract and match specimen vouchers -------------------------------------
 
@@ -74,3 +82,91 @@ glimpse(gbif_export)
 # splitsen op spaties, elke chunk met cijfers erin, haal te veel letters en
 # haakjes eruit, en die strings enkel de cijfers, en vergelijken met wat er op
 # GBIF staat in catalgoNumber, occurenceID, recordNumber (enkel de cijfers)
+
+
+
+# stringdistance matching -------------------------------------------------
+
+# Hamming distance: Number of positions with same symbol in both strings. Only
+# defined for strings of equal length.
+
+# Longest Common Substring distance: Minimum number of symbols that have to be
+# removed in both strings until resulting substrings are identical.
+
+
+
+ain(c("123","897"),c("23","2299"),method="lcs",maxDist=1)
+ain(c("123","897"),c("23","2299"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))
+
+
+gbif_sample <- gbif_export[sample(.N, 50000)]
+ENA_sample <- ENA_big[sample(.N, 50000)]
+
+gbif_sample[
+ain(
+  gbif_sample[, digit],
+  ENA_sample[, digit],
+  method = "osa",
+  maxDist = 0.25,
+  weight = c(
+    d = .25, #deletions
+    i = .25, #insertions
+    s = 1, #substitution, not allowed
+    t = 1 #transposition, not allowed
+  )
+)]#[,ENA:=ENA_sample$digit]
+
+# c("123","999")[ain(c("123","999"),c("23"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))]
+
+# gbif_sample[
+#   ain(
+#     gbif_sample[, digit],
+#     ENA_sample[, digit],
+#     method = "osa",
+#     maxDist = 0.25,
+#     weight = c(
+#       d = .25, #deletions
+#       i = .25, #insertions
+#       s = 1, #substitution, not allowed
+#       t = 1 #transposition, not allowed
+#     )
+#   )][,ENA:=ENA_sample[amatch(  gbif_sample[, digit],
+#          ENA_sample[, digit],method = "osa",
+#          maxDist = 0.25,
+#          weight = c(
+#            d = .25, #deletions
+#            i = .25, #insertions
+#            s = 1, #substitution, not allowed
+#            t = 1 #transposition, not allowed
+#          )
+# ),digit]] %>% View()
+
+
+amatch(gbif_sample[, digit],
+                  ENA_sample[, digit],method = "osa",
+                  maxDist = 0.25,
+                  weight = c(
+                    d = .25, #deletions
+                    i = .25, #insertions
+                    s = 1, #substitution, not allowed
+                    t = 1 #transposition, not allowed
+                  ),nomatch = NA,)
+
+
+
+# sample code and tryouts -------------------------------------------------
+
+
+stringdist::stringdist("123","23",method = "lcs")
+
+
+
+amatch(c("123","897"),c("23","2299","12"),method="osa",maxDist = 0.25,
+       weight = c(
+         d = .25, #deletions
+         i = .25, #insertions
+         s = 1, #substitution, not allowed
+         t = 1 #transposition, not allowed
+       ),nomatch = NA)
+
+
