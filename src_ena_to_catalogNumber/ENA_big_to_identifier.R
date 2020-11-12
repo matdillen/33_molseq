@@ -3,6 +3,35 @@ library(tidyverse)
 library(data.table)
 gbif_export<-fread(file.path("../33_molseq","data","0107125-200613084148143.csv"),encoding = "UTF-8")
 ENA_big<-fread("6M_ENA_specimen_vouchers.csv",select=c("specimen_voucher","accession"),na.strings = "")
+ENA_big_all<-fread("6M_ENA_specimen_vouchers.csv",na.strings = "")
+
+# create visualistation of available data ---------------------------------
+
+ENA_big_all[sample(.N, 100000)] %>%
+  select(-c(
+    "accession",
+    "description",
+    "scientific_name",
+    # "specimen_voucher",
+    "tax_id"
+  )) %>% 
+  mutate_all(list(~na_if(.,""))) %>%
+  visdat::vis_dat(warn_large_data = F)
+
+
+# closer look at the date field, because vis_guess does not do Date types, but
+# handles numbers better
+
+ENA_big_all[sample(.N, 100000)] %>%
+  select(c("collection_date"
+    )) %>% mutate_all(list(~na_if(.,""))) %>% 
+visdat::vis_guess(palette = "cb_safe")
+
+ENA_date<-ENA_big_all[sample(.N,100000)][,.("collection_date")]
+
+# extract and match specimen vouchers -------------------------------------
+
+
 
 extract_number <- function(input_string) {
   
