@@ -10,3 +10,5 @@ RUN pip install -r requirements.txt
 
 RUN apt-get update && \
     apt-get install -y vim
+
+RUN python django/manage.py migrate

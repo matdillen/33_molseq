@@ -15,6 +15,10 @@ class MatchingRun(models.Model):
     wikidata_results = JSONField(null=True, blank=True)
     created = models.DateField(auto_now_add=True)
 
+    # These two will contain a list like [{enaID1: [gbifID1, gbifID2}, {enaID2: [gbifID3]}]
+    validated_matches = models.JSONField(null=True, blank=True)
+    suggested_matches = models.JSONField(null=True, blank=True)
+
     def save(self):
         # If we do it this way, need to add some way of handling validation if genbank_query or gbif_query are badly formatted
         if not self.ena_results:
