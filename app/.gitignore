@@ -30,8 +30,8 @@ local_settings.py
 db.sqlite3
 
 # Environments
-*.env
-.env
+#*.env
+#.env commit dev.env for now
 .venv
 env/
 venv/
