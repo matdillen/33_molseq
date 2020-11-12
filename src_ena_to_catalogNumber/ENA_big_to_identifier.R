@@ -99,8 +99,8 @@ ain(c("123","897"),c("23","2299"),method="lcs",maxDist=1)
 ain(c("123","897"),c("23","2299"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))
 
 
-gbif_sample <- gbif_export[sample(.N, 50000)]
-ENA_sample <- ENA_big[sample(.N, 50000)]
+gbif_sample <- gbif_export[sample(.N, 5000)]
+ENA_sample <- ENA_big[sample(.N, 5000)]
 
 gbif_sample[
 ain(
@@ -141,16 +141,19 @@ ain(
 #          )
 # ),digit]] %>% View()
 
+gbif_sample %>% transmute(ENA_string=ENA_sample[amatch(gbif_sample[, digit],
+                                                       ENA_sample[, digit],method = "osa",
+                                                       maxDist = 0.25,
+                                                       weight = c(
+                                                         d = .25, #deletions
+                                                         i = .25, #insertions
+                                                         s = 1, #substitution, not allowed
+                                                         t = 1 #transposition, not allowed
+                                                       ),nomatch = NA,)][,.(digit)]) %>% 
+  filter(!is.na(ENA_string)) %>% 
+  select(digit,ENA_string) %>% 
+  View()
 
-amatch(gbif_sample[, digit],
-                  ENA_sample[, digit],method = "osa",
-                  maxDist = 0.25,
-                  weight = c(
-                    d = .25, #deletions
-                    i = .25, #insertions
-                    s = 1, #substitution, not allowed
-                    t = 1 #transposition, not allowed
-                  ),nomatch = NA,)
 
 
 
