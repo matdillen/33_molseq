@@ -25,42 +25,55 @@ for (i in 1:dim(brf)[1]) {
                       collapse="|")
 }
 
-#dontrunthisever
-# ids = ""
-# brf$colls = ""
-# coll = filter(coll,!is.na(LNAME))
-# for (i in 1:dim(brf)[1]) {
-#   for (j in 1:dim(coll)[1]) {
-#     if (grepl(coll$LNAME[j],brf$specimen_voucher[i])) {
-#       ids = paste(ids,coll$`@ID`[j],sep="|")
-#     }
-#   }
-#   brf$colls = ids
-#   ids = ""
-#   if (i%%200==0) {
-#     print(i)
-#   }
-# }
 
-swd()
-coll = read_tsv("../source files/COLLECTORS.TXT",
-                quote="",
+coll = read_tsv("data/meise-coll.txt",
                 col_types = cols(.default = "c"))
 
-nope = c("E035",
-         "MIGUELS")
+brf$verbatimRecordedByID = ""
+brf$recordedByLastName = ""
+brf$recordedBy = ""
+brf$recordedByID = ""
 
-coll = filter(coll,!is.na(LNAME))
-coll = filter(coll,!`@ID`%in%nope)
-brf$colls = ""
+#no teams parsing
+#false positives w homonyms and short last names
 for (i in 1:dim(coll)[1]) {
-  nam = filter(brf,grepl(coll$LNAME[i],specimen_voucher))
+  nam = filter(brf,
+               grepl(coll$recordedByLastName[i],
+                         specimen_voucher)|
+                 grepl(coll$recordedByLastName[i],
+                       collected_by))
   if (dim(nam)[1]>0) {
-    brf$colls[brf$accession%in%nam$accession] = paste(brf$colls[brf$accession%in%nam$accession],
-                                                      coll$`@ID`[i],
-                                                      sep="|")
+    brf[brf$accession%in%nam$accession,
+        c("verbatimRecordedByID",
+          "recordedByLastName",
+          "recordedBy",
+          "recordedByID")] = t(sapply(seq(1,
+                                          dim(nam)[1]), 
+                                      function(x) 
+                                        paste(brf[brf$accession%in%nam$accession[x],
+                                                                                c("verbatimRecordedByID",
+                                                                                  "recordedByLastName",
+                                                                                  "recordedBy",
+                                                                                  "recordedByID")],
+                                                                            tibble(coll[i,]),
+                                                                            sep="|")))
   }
 }
+
+brf$verbatimRecordedByID = gsub("^\\|",
+                               "",
+                               brf$verbatimRecordedByID)
+brf$recordedByLastName = gsub("^\\|",
+                                 "",
+                                 brf$recordedByLastName)
+brf$recordedBy = gsub("^\\|",
+                                 "",
+                                 brf$recordedBy)
+brf$recordedByID = gsub("^\\|",
+                                 "",
+                                 brf$recordedByID)
+
+
 #still need to add ids and other name info from the table
 
 write_tsv(brf,"brpos-collids.txt",na="")

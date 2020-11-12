@@ -3,6 +3,7 @@ library(jsonlite)
 library(httr)
 library(urltools)
 library(rentrez)
+library(magrittr)
 
 base_url = "https://www.ebi.ac.uk/ena/portal/api/search?"
 
@@ -80,6 +81,15 @@ for (i in 1:dim(rjson)[2]) {
     filter(.data[[var]]=="")
   stats[1,i] = dim(x)[1]
   stats[2,i] = round(100*dim(x)[1]/dim(rjson)[1],2)
+}
+
+stats = b[2,]
+for (i in 1:dim(b)[2]) {
+  var = colnames(b)[i]
+  x = b %>%
+    filter(.data[[var]]=="")
+  stats[1,i] = dim(x)[1]
+  stats[2,i] = round(100*dim(x)[1]/dim(b)[1],2)
 }
 
 full_url = paste0(base_url, "result=sequence",
@@ -207,7 +217,8 @@ full_url = paste0(base_url, "result=sequence",
                          "collected_by,",
                          "collection_date,",
                          "tax_id,",
-                         "identified_by"),
+                         "identified_by,",
+                         "tax_division"),
                   "&limit=0&format=json")
 br0 = querna(full_url)
 
