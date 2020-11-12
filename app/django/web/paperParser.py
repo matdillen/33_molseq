@@ -65,13 +65,4 @@ class paperParser():
         for i in self.token:
             if self.grep_numbers.search(i):
                 self.accession_candidates.append(i)
-            
-
-            
-        
-
-    
-    
-    
-
     
