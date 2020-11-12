@@ -21,10 +21,10 @@
     <dd>{{ object.gbif_query }}</dd>
   </dl>
 </div>
-<p>There are a total of <strong>{{ object.ena_query|length }}</strong> results from ENA. ? of them have been matched automatically using our algorithm, ? require manual matching and 1000 have no matches.</p>
+<p>There are a total of <strong>{{ object.ena_query|length }}</strong> results from ENA. ? of them have been matched automatically using our algorithm, ? require manual matching and ? have no matches.</p>
 <ul class="nav nav-tabs" style="margin: 1.8em 0 1.2em 0;">
   <li class="nav-item">
-    <a class="nav-link active" href="#">Manual (50/199 complete)
+    <a class="nav-link active" href="#">Manual (?/? complete)
     </a>
   </li>
   <li class="nav-item">
@@ -55,11 +55,13 @@
 </nav>
 
 <!-- Results -->
+{% for ena_key, gbif_keys in object.suggested_matches.items %}
 <p><strong style="padding: 10px; background-color: #bfe3ff;">Details on ENA</strong></p>
+{% with ena_result=object.ena_results|get_item:ena_key %}
 <p>
-  <strong>specimen_voucher</strong>: 1953-3766, Billiet 3529 (BR), PotgieterDNA 49
+  <strong>specimen_voucher</strong>: {{ ena_result.specimen_voucher }}
   <br>
-  <strong>description</strong>: Carissa bispinosa tRNA-Leu (trnL) gene, intron...
+  <strong>description</strong>: {{ ena_result.description }}
 </p>
 <table class="table" style="margin-top: 1em; font-size: 0.9em;">
   <thead style="">
@@ -74,58 +76,50 @@
   </thead>
   <tbody>
     <tr>
-      <td>Carissa bisponosa</td>
-      <td></td>
-      <td></td>
-      <td>2010-11-10</td>
+      <td>{{ ena_result.scientific_name  }}</td>
+      <td>{{ ena_result.country }}</td>
+      <td>{{ ena_result.collected_by }}</td>
+      <td>{{ ena_result.collection_date }}</td>
       <td style="visibility: hidden"></td>
       <td style="visibility: hidden"></td>
     </tr>
   </tbody>
-  <tr><td colspan="6" style="padding: 0"><p style="margin-top: 2em;"><strong style="margin: 10px 0; padding: 10px; background-color: #fff9ba;">GBIF matches (2)</strong></p></td></tr>
+  {% endwith %}
+  <tr><td colspan="6" style="padding: 0"><p style="margin-top: 2em;"><strong style="margin: 10px 0; padding: 10px; background-color: #fff9ba;">GBIF matches ({{ gbif_keys|length }})</strong></p></td></tr>
   <thead style="">
-  <tr>
-    <th scope="col" style="width:10%">scientific_name</th>
-    <th scope="col" style="width:10%">country</th>
-    <th scope="col" style="width:10%">collected_by</th>
-    <th scope="col" style="width:10%">collection_date</th>
-    <th scope="col" style="width:20%;">additional GBIF data</th>
-    <th scope="col" style="width:10%;"></th>
-  </tr>
+    <tr>
+      <th scope="col" style="width:10%">scientific_name</th>
+      <th scope="col" style="width:10%">country</th>
+      <th scope="col" style="width:10%">collected_by</th>
+      <th scope="col" style="width:10%">collection_date</th>
+      <th scope="col" style="width:20%;">additional GBIF data</th>
+      <th scope="col" style="width:10%;"></th>
+    </tr>
   </thead>
   <tbody>
+  {% for gbif_key in gbif_keys %}
+  {% with gbif_result=object.gbif_results|get_item:gbif_key %}
   <tr>
-    <td>Carissa bisponosa something.</td>
-    <td>Belgium</td>
-    <td>Ertz</td>
-    <td>2010-11-10</td>
+    <td>{{ gbif_result.scientificName }}</td>
+    <td>{{ gbif_result.country}}</td>
+    <td>{{ gbif_result.recordedBy }}</td>
+    <td>{{ gbif_result.eventDate }}</td>
     <td>
       <dl>
         <dt>Institution code</dt>
-        <dd>BR</dd>
+        <dd>{{ gbif_result.institutionCode }}</dd>
         <dt>Basis of record</dt>
-        <dd>Living specimen</dd>
+        <dd>{{ gbif_result.basisOfRecord }}</dd>
       </dl>
-      <p><a href="#">https://www.gbif.org/occurrence/2815058301</a></p>
+      <p><a href="https://www.gbif.org/occurrence/{{ gbif_result.gbifID }}">https://www.gbif.org/occurrence/{{ gbif_result.gbifID }}</a></p>
     </td>
     <td style="text-align: center "> <input class="form-check-input" type="checkbox" id="checkbox1" checked></td>
   </tr>
-  <tr>
-    <td>Carissa bisponosa something.</td>
-    <td>Belgium</td>
-    <td>Ertz</td>
-    <td>2010-11-10</td>
-    <td>
-      <dl>
-        <dt>Institution code</dt>
-        <dd>BR</dd>
-        <dt>Basis of record</dt>
-        <dd>Living specimen</dd>
-      </dl>
-      <p><a href="#">https://www.gbif.org/occurrence/2815058301</a></p>
-    </td>
-    <td style="text-align: center"> <input class="form-check-input" type="checkbox" id="checkbox" value="option1" checked></td>
-  </tr>
+  {% endwith %}
+  {% empty %}
+  <tr><p>No GBIF match suggestions</p></tr>
+  {% endfor %}
   </tbody>
 </table>
+{% endfor %}
 {% endblock %}

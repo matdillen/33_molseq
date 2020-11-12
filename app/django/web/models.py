@@ -16,6 +16,7 @@ class MatchingRun(models.Model):
     created = models.DateField(auto_now_add=True)
 
     # These two will contain a list like [{enaID1: [gbifID1, gbifID2}, {enaID2: [gbifID3]}]
+    # obj.suggested_results = {'MH175419': ['2571204007', '2571204014', '2571204017']}
     # The validated_matches will be a data export for Francisco/nsidr.org
     validated_matches = models.JSONField(null=True, blank=True)
     suggested_matches = models.JSONField(null=True, blank=True)
@@ -26,9 +27,8 @@ class MatchingRun(models.Model):
             self.ena_results = self.get_ena_results()
         if not self.gbif_results:
             self.gbif_results = self.get_gbif_results()
-
-        ena_df = pd.DataFrame.from_dict(self.ena_results)
-        self.wikidata_results = self.get_wikidata_results(ena_df['tax_id'].unique())
+        if not self.wikidata_results:
+            self.wikidata_results = self.get_wikidata_results(set([t['tax_id'] for k, t in self.ena_results.items()]))
         # I guess we can do some kind of automated matching here, before the super
         super(MatchingRun, self).save()
 
@@ -45,12 +45,13 @@ class MatchingRun(models.Model):
 
         search_r = requests.get(f"{base_url}search?query={self.ena_query}", params=params_d)
         print(search_r.status_code)
-        print(search_r)
-        print('^^^^ status code')
-        return search_r.json()
+        results = search_r.json()
+        # Change this to {'AF123': {'sex': '', 'host': '', 'tax_id': '84861'....}, 'AF456': {'sex': 'm', 'host': '', ...
+        return {r['accession']: r for r in results}
 
     def get_gbif_results(self):
-        return occurrences.search(**self.gbif_query)['results']
+        results = occurrences.search(**self.gbif_query)['results']
+        return {r['gbifID']: r for r in results}
 
     def get_wikidata_results(self, tax_ids):
         query_template = """
@@ -62,7 +63,7 @@ class MatchingRun(models.Model):
                 }
                 """
         results = {}
-        for tax_ids_subset in np.array_split(tax_ids, 30):
+        for tax_ids_subset in np.array_split(list(tax_ids), 30):
             query = query_template % ('"' + '" "'.join(tax_ids_subset.tolist()) + '"')
             try:
                 result_df = wdi_core.WDFunctionsEngine.execute_sparql_query(query=query, as_dataframe=True)

@@ -4,9 +4,16 @@ from django.views.generic.detail import DetailView
 from .models import MatchingRun
 
 
+
+from django.template.defaulttags import register
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
 class MatchingRunListView(ListView):
     model = MatchingRun
-    queryset = MatchingRun.objects.all().values('id', 'ena_query', 'gbif_query', 'created')
+    queryset = MatchingRun.objects.all().values('id', 'ena_query', 'gbif_query', 'created', )
 
 
 class MatchingRunDetailView(DetailView):
