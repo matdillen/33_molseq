@@ -58,7 +58,12 @@ class ENAtoGBIF:
         return {r['accession']: r for r in results}
 
     def get_gbif_results(self):
-        results = occurrences.search(**self.gbif_query)['results']
+        first = occurrences.search(**self.gbif_query)
+        results = first['results']
+        for offset in range(300, min(first['count'], 90000), 300):
+            args = {**self.gbif_query, **{'offset': offset}}
+            results += occurrences.search(**args)['results']
+
         return {r['gbifID']: r for r in results}
 
     def get_wikidata_results(self, tax_ids:list):
