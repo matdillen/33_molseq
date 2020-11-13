@@ -7,6 +7,9 @@ from nltk.tokenize import RegexpTokenizer
 # FIXME: #download nltk resource at app initialization
 # nltk.download('popular') # download nltk resource
 
+# sample_pdf = "static/252-Texto del artículo-603-2-10-20170418.pdf"
+# p = paperParser(pdf_path=sample_pdf)
+
 class paperParser:
     # potential patterns of accessions
     grep_accession = re.compile(r"^[A-Z]+\d+")  #  anything like an acession
