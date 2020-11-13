@@ -45,13 +45,9 @@ class ENAtoGBIF:
 
         # construct query strong from list of ena_accession
         if not self.ena_query:
-            for i,a in enumerate(self.ena_accession):
-                if i == 0:
-                    self.ena_query = f"accession=\"{a}\""
-                else:
-                    self.ena_query += f"+OR+accession=\"{a}\""
-
-        search_r = requests.get(f"{self.base_url}search?query={self.ena_query}", params=params_d)
+            search_r = requests.get(f"{self.base_url}search?includeAccessions={','.join(self.ena_accession)}", params=params_d)
+        else:
+            search_r = requests.get(f"{self.base_url}search?query={self.ena_query}", params=params_d)
         print(search_r.status_code)
         results = search_r.json()
         # Change this to {'AF123': {'sex': '', 'host': '', 'tax_id': '84861'....}, 'AF456': {'sex': 'm', 'host': '', ...
