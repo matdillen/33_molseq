@@ -20,8 +20,7 @@ ENA_big_all[sample(.N, 100000)] %>%
     "scientific_name",
     # "specimen_voucher",
     "tax_id"
-  )) 
-  %>% mutate_all(list(~na_if(.,"")))
+  )) %>% mutate_all(list(~na_if(.,"")))
   %>% visdat::vis_dat(warn_large_data = F)
 
 
