@@ -19,8 +19,8 @@ ENA_big_all[sample(.N, 100000)] %>%
     # "specimen_voucher",
     "tax_id"
   )) 
-  # %>% mutate_all(list(~na_if(.,""))) 
-   %>% visdat::vis_dat(warn_large_data = F)
+  %>% mutate_all(list(~na_if(.,"")))
+  %>% visdat::vis_dat(warn_large_data = F)
 
 
 # closer look at the date field, because vis_guess does not do Date types, but
@@ -42,12 +42,12 @@ ENA_date %>% group_by(type) %>% arrange() %>% visdat::vis_dat()
 # extract and match specimen vouchers -------------------------------------
 
 
-
-extract_number <- function(input_string) {
-  
-    paste0(unlist(str_extract_all(str_extract(input_string,"([0-9]+(?>-)?[0-9]+)"),"[0-9]+")),collapse = "")
-  
-}
+# 
+# extract_number <- function(input_string) {
+#   
+#     paste0(unlist(str_extract_all(str_extract(input_string,"([0-9]+(?>-)?[0-9]+)"),"[0-9]+")),collapse = "")
+#   
+# }
 
 library(stringi)
 extract_number <- function(input_string) {
@@ -70,9 +70,10 @@ extract_number <- function(input_string) {
 system.time(ENA_big[1:10000,digit:=map_chr(specimen_voucher,extract_number)])
 
 ENA_big[,digit:=map_chr(specimen_voucher,extract_number)]
-gbif_export[,digit:=map_chr(catalogNumber,extract_number)]
+# gbif_export[,digit:=map_chr(catalogNumber,extract_number)]
+gbif_export[,digit:=map_chr(recordNumber,extract_number)]
 
-gbif_export[ENA_big]
+# gbif_export[ENA_big]
 
 
 glimpse(gbif_export)
@@ -102,7 +103,7 @@ tic()
 # pull random sets to work on ---------------------------------------------
 
 # set sample size
-sample_size=100000
+sample_size=5000
 
 gbif_sample <- gbif_export[sample(.N, sample_size)][!is.na(digit), ]
 ENA_sample <- ENA_big[sample(.N, sample_size)][!is.na(digit), ]
@@ -169,7 +170,7 @@ message(paste("filtered ENA_sample down to", nrow(ENA_sample), "digits"))
 
 match_results<-ENA_sample[amatch(gbif_sample[, digit],
                   ENA_sample[, digit],method = "osa",
-                  maxDist = 0.25,
+                  maxDist = 0.5,
                   weight = c(
                     d = .25, #deletions
                     i = 1, #insertions
