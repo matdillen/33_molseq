@@ -24,13 +24,16 @@ class ENAtoGBIF:
 
     ncbi = NCBITaxa()
 
-    def __init__(self,ena_accession:list,ena_query:str,gbif_query:dict):
+    def __init__(self, gbif_query:dict, ena_accession:list=None, ena_query:str=None):
         self.ena_accession = ena_accession  # accession candidates (i.e. from user/ PaperParser)
         self.ena_query = ena_query  # more flexible search "specimen_voucher=\"*BR)*\"", this will be placed directly in the api query string
         if not self.ena_accession == None or self.ena_query == None:
             raise Exception("Only accept either one of these: ena_accession, ena_query. Not both.")
+        if self.ena_accession is None and self.ena_query is None:
+            raise Exception("At least one of these should be provided.")
         if gbif_query:
-            self.gbif_query.update(gbif_query)
+            #self.gbif_query.update(gbif_query)
+            self.gbif_query = gbif_query
 
     def get_ena_results(self):
         params_d = {
@@ -41,13 +44,12 @@ class ENAtoGBIF:
         }
 
         # construct query strong from list of ena_accession
-        if ena_accession:
-            for i,a in enumerate(ena_accession):
+        if not self.ena_query:
+            for i,a in enumerate(self.ena_accession):
                 if i == 0:
-                    ena_accession = f"accession=\"{a}\""
-                    continue
+                    self.ena_query = f"accession=\"{a}\""
                 else:
-                    ena_accession += f"+OR+accession=\"{a}\""
+                    self.ena_query += f"+OR+accession=\"{a}\""
 
         search_r = requests.get(f"{self.base_url}search?query={self.ena_query}", params=params_d)
         print(search_r.status_code)
