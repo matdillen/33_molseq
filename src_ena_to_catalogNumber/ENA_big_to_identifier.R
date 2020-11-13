@@ -3,6 +3,7 @@ library(tidyverse)
 library(data.table)
 library(stringdist)
 library(tictoc)
+library(magrittr)
 
 gbif_export<-fread(file.path("../33_molseq","data","0107125-200613084148143.csv"),encoding = "UTF-8")
 ENA_big<-fread("6M_ENA_specimen_vouchers.csv",select=c("specimen_voucher","accession"),na.strings = "")
@@ -96,14 +97,15 @@ glimpse(gbif_export)
 
 
 
-
+tic()
 
 # pull random sets to work on ---------------------------------------------
 
+# set sample size
+sample_size=100000
 
-
-gbif_sample <- gbif_export[sample(.N, 100000)][!is.na(digit), ]
-ENA_sample <- ENA_big[sample(.N, 100000)][!is.na(digit), ]
+gbif_sample <- gbif_export[sample(.N, sample_size)][!is.na(digit), ]
+ENA_sample <- ENA_big[sample(.N, sample_size)][!is.na(digit), ]
 
 # set maximum amount of times a digit can occur in the ENA dataset for it still to be matched
 digit_occurence_treshold <- 50
@@ -164,7 +166,7 @@ message(paste("filtered ENA_sample down to", nrow(ENA_sample), "digits"))
 
 
 # NOTE we are only getting the first match, not multiple! 
-tic()
+
 match_results<-ENA_sample[amatch(gbif_sample[, digit],
                   ENA_sample[, digit],method = "osa",
                   maxDist = 0.25,
@@ -174,7 +176,7 @@ match_results<-ENA_sample[amatch(gbif_sample[, digit],
                     s = 1, #substitution, not allowed
                     t = 1 #transposition, not allowed
                   ),nomatch = NA,)]$accession
-toc()
+
 
 # NOTE: extract identifier instead, and get digit by joining the columns: we
 # want from ENA: identifier, voucher specimen field, and digit
@@ -189,10 +191,11 @@ gbif_sample %>% mutate(ENA_accession=as.list(match_results)) %>%
   right_join(ENA_sample,by=c("ENA_accession"="accession"),suffix=c(".gbif",".ena")) %>% 
   filter(!is.na(ENA_accession)) %>% 
   filter(!is.na(catalogNumber)) %>% # BUG we are getting matches without catalogNumber
-  select(digit.gbif,digit.ena,ENA_accession,catalogNumber,specimen_voucher) %>% 
-  View()
+  select(digit.gbif,digit.ena,ENA_accession,catalogNumber,specimen_voucher) %T>% 
+  View("GBIF_ENA_matching_results") %>% 
+  fwrite(paste0(sample_size,"-GBIF_ENA_matching_results.csv"))
 
-
+toc()
 
 
 # sample code and tryouts -------------------------------------------------
