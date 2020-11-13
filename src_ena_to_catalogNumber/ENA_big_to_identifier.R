@@ -2,6 +2,7 @@
 library(tidyverse)
 library(data.table)
 library(stringdist)
+library(tictoc)
 
 gbif_export<-fread(file.path("../33_molseq","data","0107125-200613084148143.csv"),encoding = "UTF-8")
 ENA_big<-fread("6M_ENA_specimen_vouchers.csv",select=c("specimen_voucher","accession"),na.strings = "")
@@ -95,26 +96,29 @@ glimpse(gbif_export)
 
 
 
-ain(c("123","897"),c("23","2299"),method="lcs",maxDist=1)
-ain(c("123","897"),c("23","2299"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))
 
 
-gbif_sample <- gbif_export[sample(.N, 5000)]
-ENA_sample <- ENA_big[sample(.N, 50000)]
 
-gbif_sample[
-ain(
-  gbif_sample[, digit],
-  ENA_sample[, digit],
-  method = "osa",
-  maxDist = 0.25,
-  weight = c(
-    d = .25, #deletions
-    i = .25, #insertions
-    s = 1, #substitution, not allowed
-    t = 1 #transposition, not allowed
-  )
-)]#[,ENA:=ENA_sample$digit]
+gbif_sample <- gbif_export[sample(.N, 75000)]
+ENA_sample <- ENA_big[sample(.N, 75000)]
+
+
+# string positions 
+# 
+# gbif_sample[
+# ain(
+#   gbif_sample[, digit],
+#   ENA_sample[, digit],
+#   method = "osa",
+#   maxDist = 0.25,
+#   weight = c(
+#     d = .25, #deletions
+#     i = .25, #insertions
+#     s = 1, #substitution, not allowed
+#     t = 1 #transposition, not allowed
+#   )
+# )]#[,ENA:=ENA_sample$digit]
+
 
 # c("123","999")[ain(c("123","999"),c("23"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))]
 
@@ -141,8 +145,13 @@ ain(
 #          )
 # ),digit]] %>% View()
 
-# NOTE we are only getting the first match, not multiple! 
 
+# getting fuzzy string results --------------------------------------------
+
+
+
+# NOTE we are only getting the first match, not multiple! 
+tic()
 match_results<-ENA_sample[amatch(gbif_sample[, digit],
                   ENA_sample[, digit],method = "osa",
                   maxDist = 0.5,
@@ -152,9 +161,15 @@ match_results<-ENA_sample[amatch(gbif_sample[, digit],
                     s = 1, #substitution, not allowed
                     t = 1 #transposition, not allowed
                   ),nomatch = NA,)]$accession
+toc()
 
 # NOTE: extract identifier instead, and get digit by joining the columns: we
 # want from ENA: identifier, voucher specimen field, and digit
+
+
+# generate matched dataframe ----------------------------------------------
+
+
 
 gbif_sample %>% mutate(ENA_accession=as.list(match_results)) %>%
   mutate(ENA_accession=as.character(ENA_accession)) %>% 
@@ -182,4 +197,7 @@ amatch(c("123","897"),c("23","2299","12"),method="osa",maxDist = 0.25,
          t = 1 #transposition, not allowed
        ),nomatch = NA)
 
+
+ain(c("123","897"),c("23","2299"),method="lcs",maxDist=1)
+ain(c("123","897"),c("23","2299"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))
 
