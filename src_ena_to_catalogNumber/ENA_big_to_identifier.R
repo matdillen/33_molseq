@@ -98,10 +98,23 @@ glimpse(gbif_export)
 
 
 
+# pull random sets to work on ---------------------------------------------
 
-gbif_sample <- gbif_export[sample(.N, 75000)]
-ENA_sample <- ENA_big[sample(.N, 75000)]
 
+
+gbif_sample <- gbif_export[sample(.N, 100000)][!is.na(digit), ]
+ENA_sample <- ENA_big[sample(.N, 100000)][!is.na(digit), ]
+
+# set maximum amount of times a digit can occur in the ENA dataset for it still to be matched
+digit_occurence_treshold <- 50
+common_digits <- ENA_sample %>%
+  group_by(digit) %>%
+  tally() %>%
+  filter(n > digit_occurence_treshold) %>%
+  pull(digit)
+# drop the most common digits
+ENA_sample <- ENA_sample %>% filter(!(digit %in% common_digits))
+message(paste("filtered ENA_sample down to", nrow(ENA_sample), "digits"))
 
 # string positions 
 # 
@@ -154,7 +167,7 @@ ENA_sample <- ENA_big[sample(.N, 75000)]
 tic()
 match_results<-ENA_sample[amatch(gbif_sample[, digit],
                   ENA_sample[, digit],method = "osa",
-                  maxDist = 0.5,
+                  maxDist = 0.25,
                   weight = c(
                     d = .25, #deletions
                     i = 1, #insertions
