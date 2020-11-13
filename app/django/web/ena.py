@@ -18,15 +18,21 @@ class ENAtoGBIF:
     ena_accession = None
     ena_query = None
     ena_return = None
+    ena_query_param = {
+            "result": "sequence",
+            "fields": all_sequence_return_fields,
+            "format": "json",
+            "limit": 0
+        }
     gbif_query = {
         "institutionCode" : "", 
         "taxonKey" : ""
     }
 
-    def __init__(self, gbif_query:dict, ena_accession:list=None, ena_query:str=None):
+    def __init__(self, gbif_query:dict=None,ena_accession:list=None, ena_query:str=None):
         self.ena_accession = ena_accession  # accession candidates (i.e. from user/ PaperParser)
         self.ena_query = ena_query  # more flexible search "specimen_voucher=\"*BR)*\"", this will be placed directly in the api query string
-        if not self.ena_accession == None or self.ena_query == None:
+        if not (self.ena_accession == None or self.ena_query == None):
             raise Exception("Only accept either one of these: ena_accession, ena_query. Not both.")
         if self.ena_accession is None and self.ena_query is None:
             raise Exception("At least one of these should be provided.")
@@ -35,18 +41,13 @@ class ENAtoGBIF:
             self.gbif_query = gbif_query
 
     def get_ena_results(self):
-        params_d = {
-            "result": "sequence",
-            "fields": self.all_sequence_return_fields,
-            "format": "json",
-            "limit": 0
-        }
 
         # construct query strong from list of ena_accession
+        # FIXME: ena api refuse to process wrong accession, have to filter it before query
         if not self.ena_query:
-            search_r = requests.get(f"{self.base_url}search?includeAccessions={','.join(self.ena_accession)}", params=params_d)
+            search_r = requests.get(f"{self.base_url}search?includeAccessions={','.join([str(s) for s in self.ena_accession])}", params=self.ena_query_param)
         else:
-            search_r = requests.get(f"{self.base_url}search?query={self.ena_query}", params=params_d)
+            search_r = requests.get(f"{self.base_url}search?query={self.ena_query}", params=self.ena_query_param)
         print(search_r.status_code)
         results = search_r.json()
         # Change this to {'AF123': {'sex': '', 'host': '', 'tax_id': '84861'....}, 'AF456': {'sex': 'm', 'host': '', ...
