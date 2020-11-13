@@ -11,10 +11,10 @@ class paperParser:
     # potential patterns of accessions
     grep_accession = re.compile(r"^[A-Z]+\d+")  #  anything like an acession
     grep_numbers = re.compile(r"^\d{5,}$")  # 5 or more digits, to avoid matching year
+    tokenizer = RegexpTokenizer(r'\w+')
     
     def __init__(self,pdf_path:str):
         self.pdf_path = pdf_path
-        self.tokenizer = RegexpTokenizer(r'\w+')
 
     # SET
     def set_tokenizer_pattern(self,pattern:str):
@@ -30,7 +30,7 @@ class paperParser:
         """
         self.token = self.tokenizer.tokenize(self.text)
         self.token = list(set(self.token))
-        self,sent_token = nltk.sent_tokenize(self.text)
+        self.sent_token = nltk.sent_tokenize(self.text)
 
     def search_accession_org(self,label_to_look_for:str="ORGANIZATION"):
         """
@@ -67,3 +67,8 @@ class paperParser:
             if self.grep_numbers.search(i):
                 self.accession_candidates.append(i)
     
+    def auto_parse(self):
+        self.extract_text()
+        self.tokenize()
+        self.search_accession_org()
+        self.grep_accession()
