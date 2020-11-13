@@ -5,15 +5,18 @@ from nltk.tokenize import RegexpTokenizer
 
 
 # FIXME: #download nltk resource at app initialization
-# nltk.download('popular') # download nltk resource
+nltk.download('popular') # download nltk resource
 
 # sample_pdf = "static/252-Texto del artículo-603-2-10-20170418.pdf"
 # p = paperParser(pdf_path=sample_pdf)
 
+# herbarium code map
+#https://github.com/nybgvh/IH-API/wiki
+
 class paperParser:
     # potential patterns of accessions
-    grep_accession = re.compile(r"^[A-Z]+\d+")  #  anything like an acession
-    grep_numbers = re.compile(r"^\d{5,}$")  # 5 or more digits, to avoid matching year
+    grep_accession_re = re.compile(r"^[A-Z]+\d+")  #  anything like an acession
+    grep_numbers_re = re.compile(r"^\d{5,}$")  # 5 or more digits, to avoid matching year
     tokenizer = RegexpTokenizer(r'\w+')
     
     def __init__(self,pdf_path:str):
@@ -41,8 +44,7 @@ class paperParser:
         """
         # filter sentences with keyword 'accession'
         accession_sent = []
-        sent_text = nltk.sent_tokenize(self.sent_token)
-        for s in sent_text:
+        for s in self.sent_token:
             if re.search("accession",s):
                 print(s)
                 accession_sent.append(s)
@@ -64,10 +66,10 @@ class paperParser:
     def grep_accession(self):
         self.accession_candidates = []
         for i in self.token:
-            if self.grep_accession.search(i):
+            if self.grep_accession_re.search(i):
                 self.accession_candidates.append(i)
         for i in self.token:
-            if self.grep_numbers.search(i):
+            if self.grep_numbers_re.search(i):
                 self.accession_candidates.append(i)
     
     def auto_parse(self):

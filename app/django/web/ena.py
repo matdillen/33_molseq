@@ -17,12 +17,11 @@ class ENAtoGBIF:
     base_url = "https://www.ebi.ac.uk/ena/portal/api/"
     ena_accession = None
     ena_query = None
+    ena_return = None
     gbif_query = {
         "institutionCode" : "", 
         "taxonKey" : ""
     }
-
-    ncbi = NCBITaxa()
 
     def __init__(self, gbif_query:dict, ena_accession:list=None, ena_query:str=None):
         self.ena_accession = ena_accession  # accession candidates (i.e. from user/ PaperParser)
@@ -51,16 +50,22 @@ class ENAtoGBIF:
         print(search_r.status_code)
         results = search_r.json()
         # Change this to {'AF123': {'sex': '', 'host': '', 'tax_id': '84861'....}, 'AF456': {'sex': 'm', 'host': '', ...
+        # also save it
+        self.ena_return = {r['accession']: r for r in results}
         return {r['accession']: r for r in results}
 
     def get_gbif_results(self):
         results = occurrences.search(**self.gbif_query)['results']
         return {r['gbifID']: r for r in results}
 
-    def get_wikidata_results(self, tax_ids:list):
+    def get_wikidata_results(self, tax_ids:list=None):
+        if tax_ids is None:
+            assert (self.ena_return is not None) , "Empty ena API return"
+            tax_ids = []
+            for a,d in self.ena_return:
+                tax_ids.append(d["tax_id"])
 
         # TODO: if there is no match, go up to family level
-
         query_template = """
                 SELECT ?taxon ?taxonLabel ?ncbi_taxonID ?gbifid WHERE {
                   VALUES ?ncbi_taxonID {%s}
@@ -89,6 +94,7 @@ class ENAtoGBIF:
 
         return results.replace(np.nan, '').to_dict()
 
+    # FIXME: maybe better to use the gbif API
     def ncbi_taxnomy_get_lineage(self,ncbi_taxonID:list):
         lineage_ls = []
         # http://etetoolkit.org/docs/latest/tutorial/tutorial_ncbitaxonomy.html
