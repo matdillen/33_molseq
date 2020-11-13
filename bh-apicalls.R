@@ -5,8 +5,7 @@ library(urltools)
 library(rentrez)
 library(magrittr)
 
-base_url = "https://www.ebi.ac.uk/ena/portal/api/search?"
-
+#function to query ena
 querna <- function(url) {
   full_url <- URLencode(url)
   ena_r = GET(full_url)
@@ -18,6 +17,8 @@ querna <- function(url) {
 }
 
 #ena
+
+base_url = "https://www.ebi.ac.uk/ena/portal/api/search?"
 
 #niki's example request
 full_url = paste0(base_url, "result=sequence",
@@ -60,6 +61,7 @@ full_url = paste0(base_url, "result=sequence",
                          "identified_by"),
                   "&limit=0&format=json")
 
+#separate extraction as memory issues may occur:
 full_url <- URLencode(full_url)
 
 ena_r = GET(full_url)
@@ -67,6 +69,8 @@ ena_r = GET(full_url)
 rcontent = content(ena_r,
                    as="raw")
 
+#may need to save workspace or raw file and reboot R session
+#then convert raw content
 rcontent= rawToChar(rcontent)
 
 rjson = fromJSON(rcontent,
@@ -74,15 +78,6 @@ rjson = fromJSON(rcontent,
 
 #see frequency of empty fields
 #use this on bigset for an overview (otherwise not used)
-stats = rjson[2,]
-for (i in 1:dim(rjson)[2]) {
-  var = colnames(rjson)[i]
-  x = rjson %>%
-    filter(.data[[var]]=="")
-  stats[1,i] = dim(x)[1]
-  stats[2,i] = round(100*dim(x)[1]/dim(rjson)[1],2)
-}
-
 stats = b[2,]
 for (i in 1:dim(b)[2]) {
   var = colnames(b)[i]
@@ -92,8 +87,8 @@ for (i in 1:dim(b)[2]) {
   stats[2,i] = round(100*dim(x)[1]/dim(b)[1],2)
 }
 
+#other queries for Meise-related sequences
 full_url = paste0(base_url, "result=sequence",
-                  #"&query=collection_date>=2015-01-01 AND collection_date<=2019-12-31",
                   "&query=specimen_voucher=\"*meise*\"",
                   paste0("&fields=",
                          "accession,",
@@ -181,7 +176,7 @@ brdash = querna(full_url)
 write_tsv(brdash,"data/brdashset.txt",na="")
 
 #don't run
-#many genes give false positives
+#many genes give false positives when querying the description field
 # full_url = paste0(base_url, "result=sequence",
 #                   "&query=description=\"*BR)*\"",
 #                   paste0("&fields=",
@@ -246,23 +241,23 @@ br0 = querna(full_url)
 
 #
 #samples: very few
-full_url = paste0(base_url, "result=sample",
-                  "&query=center_name=\"*br*\"",
-                  paste0("&fields=",
-                         "accession,",
-                         "country,",
-                         "location,",
-                         "description,",
-                         "bio_material,",
-                         "culture_collection,",
-                         "specimen_voucher,",
-                         "sample_accession,",
-                         "collected_by,",
-                         "collection_date,",
-                         "identified_by,",
-                         "center_name"),
-                  "&limit=0&format=json")
-brs = querna(full_url)
+# full_url = paste0(base_url, "result=sample",
+#                   "&query=center_name=\"*br*\"",
+#                   paste0("&fields=",
+#                          "accession,",
+#                          "country,",
+#                          "location,",
+#                          "description,",
+#                          "bio_material,",
+#                          "culture_collection,",
+#                          "specimen_voucher,",
+#                          "sample_accession,",
+#                          "collected_by,",
+#                          "collection_date,",
+#                          "identified_by,",
+#                          "center_name"),
+#                   "&limit=0&format=json")
+# brs = querna(full_url)
 
 #old approach: multiple queries join
 
@@ -276,6 +271,7 @@ br = filter(br,!duplicated(accession))
 write_tsv(br,"data/brpossibles.txt",na="")
 
 #new approach: mine big set of b query
+#allows use of regex for barcodes
 br2 = b %>%
   mutate(specimen_voucher2 = tolower(specimen_voucher)) %>%
   filter(grepl(paste("br\\)",
@@ -290,20 +286,8 @@ br2 = b %>%
                specimen_voucher2)) %>%
   select(-specimen_voucher2)
 
-#will omit a few meise with no b
+#will omit a few of the meise query with no b
 br2n = filter(br2,!accession%in%br$accession)
 br3 = rbind(br,br2n)
 
 write_tsv(br3,"brpossibles.txt",na="")
-
-#genbank
-
-gb_r = entrez_search(db="nuccore",
-                  term="*BR)*[ALL]")
-
-#only 20 res, need to page
-
-entrez_db_searchable(db="nuccore")
-
-gb_results = entrez_summary(db="nuccore",
-                   id=gb_r$ids)
