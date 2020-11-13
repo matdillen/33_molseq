@@ -18,7 +18,7 @@ ENA_big_all[sample(.N, 100000)] %>%
     "tax_id"
   )) 
   # %>% mutate_all(list(~na_if(.,""))) 
-  %>% visdat::vis_dat(warn_large_data = F)
+   %>% visdat::vis_dat(warn_large_data = F)
 
 
 # closer look at the date field, because vis_guess does not do Date types, but
@@ -99,7 +99,7 @@ ain(c("123","897"),c("23","2299"),method="lcs",maxDist=1)
 ain(c("123","897"),c("23","2299"),method="osa",maxDist=1,weight=c(d=.5,i=.5,s=1,t=1))
 
 
-gbif_sample <- gbif_export[sample(.N, 50000)]
+gbif_sample <- gbif_export[sample(.N, 5000)]
 ENA_sample <- ENA_big[sample(.N, 50000)]
 
 gbif_sample[
@@ -141,23 +141,27 @@ ain(
 #          )
 # ),digit]] %>% View()
 
+# NOTE we are only getting the first match, not multiple! 
 
 match_results<-ENA_sample[amatch(gbif_sample[, digit],
                   ENA_sample[, digit],method = "osa",
-                  maxDist = 0.25,
+                  maxDist = 0.5,
                   weight = c(
                     d = .25, #deletions
-                    i = .25, #insertions
+                    i = 1, #insertions
                     s = 1, #substitution, not allowed
                     t = 1 #transposition, not allowed
-                  ),nomatch = NA,),.(digit)]$digit
+                  ),nomatch = NA,)]$accession
 
 # NOTE: extract identifier instead, and get digit by joining the columns: we
 # want from ENA: identifier, voucher specimen field, and digit
 
-gbif_sample %>% mutate(ENA_string=as.list(match_results)) %>% 
-  filter(!is.na(ENA_string)) %>% 
-  select(digit,ENA_string) %>% 
+gbif_sample %>% mutate(ENA_accession=as.list(match_results)) %>%
+  mutate(ENA_accession=as.character(ENA_accession)) %>% 
+  right_join(ENA_sample,by=c("ENA_accession"="accession"),suffix=c(".gbif",".ena")) %>% 
+  filter(!is.na(ENA_accession)) %>% 
+  filter(!is.na(catalogNumber)) %>% # BUG we are getting matches without catalogNumber
+  select(digit.gbif,digit.ena,ENA_accession,catalogNumber,specimen_voucher) %>% 
   View()
 
 
