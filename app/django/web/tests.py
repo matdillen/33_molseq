@@ -10,6 +10,7 @@ p = paperParser(pdf_path=sample_pdf)
 accession_ls = p.auto_parse()
 
 # test ena
+# still working on this
 m = ENAtoGBIF(ena_accession=accession_ls)
 m.get_ena_results()
 
