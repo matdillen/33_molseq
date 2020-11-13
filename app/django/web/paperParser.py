@@ -71,6 +71,12 @@ class paperParser:
         for i in self.token:
             if self.grep_numbers_re.search(i):
                 self.accession_candidates.append(i)
+
+    def grep_location(self):
+        pass
+
+    def grep_authour(self):
+        pass
     
     def auto_parse(self):
         self.extract_text()
