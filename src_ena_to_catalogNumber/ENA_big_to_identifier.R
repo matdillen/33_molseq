@@ -8,6 +8,8 @@ library(magrittr)
 gbif_export<-fread(file.path("../33_molseq","data","0107125-200613084148143.csv"),encoding = "UTF-8")
 ENA_big<-fread("6M_ENA_specimen_vouchers.csv",select=c("specimen_voucher","accession"),na.strings = "")
 ENA_big_all<-fread("6M_ENA_specimen_vouchers.csv",na.strings = "") %>% mutate_all(list(~na_if(.,"")))
+ENA_poss<-fread(file.path("../33_molseq","data","brpossibles.txt"))
+
 
 # create visualistation of available data ---------------------------------
 
@@ -18,9 +20,8 @@ ENA_big_all[sample(.N, 100000)] %>%
     "scientific_name",
     # "specimen_voucher",
     "tax_id"
-  )) 
-  # %>% mutate_all(list(~na_if(.,""))) 
-   %>% visdat::vis_dat(warn_large_data = F)
+  )) %>% mutate_all(list(~na_if(.,"")))
+  %>% visdat::vis_dat(warn_large_data = F)
 
 
 # closer look at the date field, because vis_guess does not do Date types, but
@@ -42,12 +43,12 @@ ENA_date %>% group_by(type) %>% arrange() %>% visdat::vis_dat()
 # extract and match specimen vouchers -------------------------------------
 
 
-
-extract_number <- function(input_string) {
-  
-    paste0(unlist(str_extract_all(str_extract(input_string,"([0-9]+(?>-)?[0-9]+)"),"[0-9]+")),collapse = "")
-  
-}
+# 
+# extract_number <- function(input_string) {
+#   
+#     paste0(unlist(str_extract_all(str_extract(input_string,"([0-9]+(?>-)?[0-9]+)"),"[0-9]+")),collapse = "")
+#   
+# }
 
 library(stringi)
 extract_number <- function(input_string) {
@@ -65,14 +66,15 @@ extract_number <- function(input_string) {
 
 # microbenchmark(extract_number,times = 100)
 
-
+ENA_poss[,digit:=map_chr(specimen_voucher,extract_number)]
 
 system.time(ENA_big[1:10000,digit:=map_chr(specimen_voucher,extract_number)])
 
 ENA_big[,digit:=map_chr(specimen_voucher,extract_number)]
-gbif_export[,digit:=map_chr(catalogNumber,extract_number)]
+# gbif_export[,digit:=map_chr(catalogNumber,extract_number)]
+gbif_export[,digit:=map_chr(recordNumber,extract_number)]
 
-gbif_export[ENA_big]
+# gbif_export[ENA_big]
 
 
 glimpse(gbif_export)
@@ -105,8 +107,8 @@ tic()
 sample_size=100000
 
 gbif_sample <- gbif_export[sample(.N, sample_size)][!is.na(digit), ]
-ENA_sample <- ENA_big[sample(.N, sample_size)][!is.na(digit), ]
-
+# ENA_sample <- ENA_big[sample(.N, sample_size)][!is.na(digit), ]
+ENA_sample <- ENA_poss[!is.na(digit), ]
 # set maximum amount of times a digit can occur in the ENA dataset for it still to be matched
 digit_occurence_treshold <- 50
 common_digits <- ENA_sample %>%
@@ -169,7 +171,7 @@ message(paste("filtered ENA_sample down to", nrow(ENA_sample), "digits"))
 
 match_results<-ENA_sample[amatch(gbif_sample[, digit],
                   ENA_sample[, digit],method = "osa",
-                  maxDist = 0.25,
+                  maxDist = 0.5,
                   weight = c(
                     d = .25, #deletions
                     i = 1, #insertions
@@ -191,7 +193,7 @@ gbif_sample %>% mutate(ENA_accession=as.list(match_results)) %>%
   right_join(ENA_sample,by=c("ENA_accession"="accession"),suffix=c(".gbif",".ena")) %>% 
   filter(!is.na(ENA_accession)) %>% 
   filter(!is.na(catalogNumber)) %>% # BUG we are getting matches without catalogNumber
-  select(digit.gbif,digit.ena,ENA_accession,catalogNumber,specimen_voucher) %T>% 
+  select(digit.gbif,digit.ena,ENA_accession,catalogNumber,specimen_voucher,recordNumber) %T>% 
   View("GBIF_ENA_matching_results") %>% 
   fwrite(paste0(sample_size,"-GBIF_ENA_matching_results.csv"))
 
