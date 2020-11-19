@@ -35,5 +35,10 @@ vignettes/*.pdf
 *.utf8.md
 *.knit.md
 
+
 # OSX
 .DS_Store
+=======
+data/0107125-200613084148143.zip
+data/herbarium_export_20201110022328.zip
+data/6M_ENA_specimen_vouchers.csv.gz
