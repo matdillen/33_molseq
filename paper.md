@@ -69,6 +69,7 @@ Ultimately, these outcomes will help any collection connect its data better and 
 
 For example, our [herbarium)[https://www.plantentuinmeise.be/en/] has been working towards connecting all the people associated with specimens, such as collectors and identifiers, to stable identifiers, such as [ORCID](https://orcid.org/) IDs. If we are able to match person names on sequences to stable identities, such as [ORCID](https://orcid.org/) IDs, we can narrow the search of specimens and sequence considerably. We can also make use of the power of [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) as a broker of person identifiers, so that if we have one identifier in one database, we can use Wikidata to find other identifiers and use the full suite of identifiers to search the other database.
 
+![Schema of the workflow](data/workflowschema.jpg "Schema of the workflow")
 
 Figure 1. A diagram of the connections between sequence databases (e.g. ENA) and specimens (GBIF). Sequences and specimens are often cited in literature and biological databases. These can be used as a source of accession numbers, locations, dates, person names and taxa with which sequence and specimen data can be linked. Wikidata can be used as a broker to link identifier schemes, such as taxon IDs. Even though candidate matches between sequences and specimens can be found uncertainty often remains. Therefore, we have foreseen a human verification step to confirm matches before the results are stored as a digital object that combines the results.
 # 2. Methods
