@@ -64,7 +64,7 @@ To analyze the types of data available in databases suitable for linking specime
 To create scripts to match existing data and evaluate how successful we are.
 
 Ultimately, these outcomes will help any collection connect its data better and will support the Elixir (https://elixir-europe.org/) goals of improving human and machine readable access to all data in the biological sciences.
-## Methodological Approach
+## 1.1. Methodological Approach
 [European Nucleotide Archive (ENA)](https://www.ebi.ac.uk/ena/browser/home) and other sequence databases follow standards such as [Minimum Information about any (x) Sequence (MIxS)](https://gensc.org/mixs/) created by the Genomic Standards Consortium. Specimens databases generally follow the standards, Darwin Core ([@10.1371/journal.pone.0029715]) or ABCD ([@10.1080/11263504.2012.740085]). These standards define terms for the data that describe the sequence or specimen and their origins. However, many of these terms require only free text content and the terms do not necessarily map interoperably between standards. Our approach is to discover ways to connect related elements of these data standards to identify the associated sequences and specimens.
 
 For example, our [herbarium](https://www.plantentuinmeise.be/en/) has been working towards connecting all the people associated with specimens, such as collectors and identifiers, to stable identifiers, such as [ORCID](https://orcid.org/) IDs [@10.1093/database/baaa072]. If we are able to match a person name in the metadata of a sequence to a stable identifier, such as an [ORCID](https://orcid.org/) ID, we can narrow the search of specimens and sequence considerably. We can also make use of the power of [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) as a broker of person identifiers, so that if we have one identifier in one database, we can use Wikidata to find other identifiers and use the full suite of identifiers to search the other database.
@@ -128,63 +128,23 @@ Through this process, 1,336 ENA sequences were connected to at least one GBIF re
 
 Candidate matches between sequences on GBIF and sequences on ENA were envisaged to be processed through an online application whereby a user could compare the metadata of the two entities. They would then confirm in the application that they agreed that both the sequence and the specimen had a common origin. During the Biohackathon a Django app was developed to demonstrate the possibility. Matches could be imported in a JSON format and combined with additional metadata from both ENA and GBIF to better inform the user. In the future, such an app could export validated matches. This export could subsequently be used to annotate the GBIF records with their correct ENA sequence, or vice versa. Validated matches could also be made available through an update operation of a digital object representing the Meise specimens, adding links to ENA sequences when positively matched.
 
-
-
-Please separate paragraphs with a double line.
-
-## Subsection level 2
-
-Please keep sections to a maximum of three levels, even better if only two levels.
-
-### Subsection level 3
-
-Please keep sections to a maximum of three levels.
-
-## Tables, figures and so on
-
-Please remember to introduce tables (see Table 1) before they appear on the document. We recommend to center tables, formulas and figure but not the corresponding captions. Feel free to modify the table style as it better suits to your data.
-
-Table 1
-| Header 1 | Header 2 |
-| -------- | -------- |
-| item 1 | item 2 |
-| item 3 | item 4 |
-
-Remember to introduce figures (see Figure 1) before they appear on the document. 
-
-![BioHackrXiv logo](./biohackrxiv.png)
- 
-Figure 1. A figure corresponding to the logo of our BioHackrXiv preprint.
-
-# Other main section on your manuscript level 1
-
-Feel free to use numbered lists or bullet points as you need.
-* Item 1
-* Item 2
-
-# Discussion and/or Conclusion
-
-We recommend to include some discussion or conclusion about your work. Feel free to modify the section title as it fits better to your manuscript.
-
-# Recommendations
+# 3. Recommendations
 
 For INSDC partner databases
-Scientists depositing sequence data should be given training on the data model and standards used.
-Databases should incorporate PIDs into their data model for people (i.e. [ORCID](https://orcid.org/)), institutions (i.e. [ROR](https://ror.org/scope)), publications (i.e. [DOI](https://www.doi.org/)) and specimens [@10.1093/database/bax003].
+Databases should incorporate PIDs into their data model for…
+people (i.e. [ORCID](https://orcid.org/))
+institutions (i.e. [ROR](https://ror.org/scope))
+publications (i.e. [DOI](https://www.doi.org/))
+and specimens [@10.1093/database/bax003].
 For collections
+Scientists depositing sequence data should be given training on the data model and standards used.
 Collections should make more effort to reconnect their backlog of voucher specimens to their sequences.
 Specimens should obtain a PID at the earliest point possible upon collection and certainly before tissue collection for sequencing.
 Novel data encapsulation approaches are needed to ensure that the links between these data can be transversed by people and by machines.
 
-# Future work
+# 4. Future work
 
 Reconnecting the links between objects and the data derived from them is inefficient, error prone and expensive. Indeed, if rigorous data management procedures were followed it would not be necessary. Considerable work needs to be done to improve scientific procedures, infrastructural standards and scientific data management culture. Much of the followup work that needs to be done is to make these changes, so that there will be no need to reconnect vouchers and their data in the future.
-
-# Jupyter notebooks, GitHub repositories and data repositories
-
-* Please add a list here
-* Make sure you let us know which of these correspond to Jupyter notebooks. Although not supported yet, we plan to add features for them
-* And remember, software and data need a license for them to be used by others, no license means no clear rules so nobody could legally use a non-licensed research object, whatever that object is
 
 # Acknowledgements
 The authors thank the organizers BioHackathon-Europe for their support and the smooth running of the event. QG, PH, MD, MT were supported by SYNTHESYS+ a Research and Innovation action funded under H2020-EU.1.4.1.2. Grant agreement ID: 823827 and by DiSSCo Prepare H2020-INFRADEV-2019-2020 – Grant Agreement No. 871043.
