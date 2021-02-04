@@ -149,6 +149,4 @@ The authors thank the organizers BioHackathon-Europe for their support and the s
 
 # References
 
-<!-- Leave thise section blank, create a paper.bib with all your references. -->
-
 
