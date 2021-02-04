@@ -11,7 +11,7 @@ ENA_big_all <- fread("6M_ENA_specimen_vouchers.csv", na.strings = "") %>% mutate
 ENA_poss <- fread(file.path("../33_molseq", "data", "brpossibles.txt"))
 
 
-# create visualistation of available data ---------------------------------
+# create visualization of available data ---------------------------------
 
 ENA_big_all[sample(.N, 100000)] %>%
   select(-c(
@@ -22,7 +22,7 @@ ENA_big_all[sample(.N, 100000)] %>%
     "tax_id"
   )) %>%
   mutate_all(list(~ na_if(., ""))) %>%
-  visdat::vis_dat(warn_large_data = F)
+  visdat::vis_dat(warn_large_data = F,palette = "cb_safe")
 
 
 # closer look at the date field, because vis_guess does not do Date types, but
@@ -37,7 +37,11 @@ determine_type <- function(input_object) {
   readr::guess_parser(input_object)
 }
 
-ENA_date <- ENA_big_all[sample(.N, 100000)][, .(collection_date)][, type := map_chr(collection_date, determine_type)]
+ENA_date <- 
+  ENA_big_all[sample(.N, 100000)][, .(collection_date)][
+    , type := map_chr(collection_date, determine_type)] %>% 
+  mutate_all(as.character)
+
 ENA_date %>%
   group_by(type) %>%
   arrange() %>%
