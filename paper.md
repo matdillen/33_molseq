@@ -185,6 +185,7 @@ Based upon our experiences during the Biohackathon-Europe 2020 we make several r
 ## For INSDC partner databases
 
 Databases should incorporate PIDs into their data model for…
+
 * people (i.e. [ORCID](https://orcid.org/))
 * institutions (i.e. [ROR](https://ror.org/scope))
 * publications (i.e. [DOI](https://www.doi.org/))
@@ -202,7 +203,3 @@ Databases should incorporate PIDs into their data model for…
 The authors thank the organizers BioHackathon-Europe for their support and the smooth running of the event. QG, PH, MD, MT were supported by SYNTHESYS+ a Research and Innovation action funded under H2020-EU.1.4.1.2. Grant agreement ID: 823827 and by DiSSCo Prepare H2020-INFRADEV-2019-2020 – Grant Agreement No. 871043.
 
 # 6. References
-
-
-
-
