@@ -49,6 +49,7 @@ bibliography: paper.bib
 
 # Abstract
 When sequencing molecules from an organism, it is standard practice to create voucher specimens. This ensures that the results are repeatable and that the identification of the organism can be verified. It also means that the sequence data can be linked to a whole host of other data related to the specimen, including traits, other sequences, environmental data and geography. It is therefore critical that explicit, preferably machine readable, links exist between voucher and sequence. However, such links do not exist in the databases of the International Nucleotide Sequence Database Collaboration (INSDC). If it were possible to create permanent bidirectional links between specimens and sequence it would not only make data more findable, but would also open new avenues for research. In the Biohackathon we built a semi-automated workflow to take specimen data from the Meise Herbarium and search for references to those specimens in the European Nucleotide Archive (ENA). We achieved this by matching data elements of the specimen and sequence together and by adding a “human-in-the-loop” process whereby possible matches could be confirmed. Although we found that it was possible to discover and match sequences to their vouchers in our collection, we encountered many problems of data standardization, missing data and errors. These problems make the process unreliable and unsuitable to rediscover all the possible links that exist. Ultimately, improved standards and training would remove the need for retrospective relinking of specimens with their sequence. Therefore, we make some tentative recommendations for how this could be achieved in the future.
+
 # 1. Introduction or Background
 
 When molecules are sequenced from an organism, it is best practice to create voucher specimens [@PLEIJEL2008369; @10.1111/jai.12568]. This ensures that the results are repeatable and that the identification of the organism can be verified. It also means that other information, that perhaps do not fit within the data model for sequences, can still be made available, linked to the specimen [@10.1128/mBio.02698-20]. Molecular sequence vouchers are often kept in herbaria and museums where they are curated and stored for the long-term. Similarly, DNA is also extracted from ancient specimens that have been collected and stored in collections, perhaps from before sequencing technologies were even available. In both cases, it is important to be able to know all sequences extracted from a specimen, as well as find the specimen from which a sequence has been extracted. Yet currently, connecting specimens to sequences is difficult without considerable manual detective work. To a researcher with expertise, specimens are identifiable by the details of the collection event, such as date, location, collector, collector number and taxonomic name. They may also be referenced by accession numbers, such as barcodes attached to the specimen. However, these fields are mostly unformatted text strings in a database record and there is little-to-no consistency between these data in specimen and sequence databases.
@@ -64,7 +65,8 @@ To create scripts to match existing data and evaluate how successful we are.
 To make recommendations on how specimen and sequence databases should be connected in the future.
 
 Ultimately, these outcomes will help any collection connect its data better and will support the Elixir (https://elixir-europe.org/) goals of improving human and machine readable access to all data in the biological sciences.
-## 1.1. Methodological Approach
+
+## 1.1 Methodological Approach
 The [European Nucleotide Archive (ENA)](https://www.ebi.ac.uk/ena/browser/home) and other sequence databases follow standards such as [Minimum Information about any (x) Sequence (MIxS)](https://gensc.org/mixs/) created by the Genomic Standards Consortium. Specimen databases generally follow the standards, Darwin Core [@10.1371/journal.pone.0029715] or ABCD [@10.1080/11263504.2012.740085]. These standards define terms for the data that describe the sequence or specimen and their origins. However, many of these terms require only free text content and the terms do not necessarily map interoperably between standards. Our approach is to mine these text strings for related common elements in associated sequences and specimens and use our knowledge of our collections to link them together.
 
 For example, the Meise [herbarium](https://www.botanicalcollections.be) has been working towards connecting all the people associated with specimens, such as collectors and identifiers, to stable identifiers, such as [ORCID](https://orcid.org/) IDs [@10.1093/database/baaa072]. If we are able to match a person name in the metadata of a sequence to a stable identifier, such as an [ORCID](https://orcid.org/) ID, we can narrow the search of specimens and sequence considerably. We can also make use of the power of [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) as a broker of person identifiers, so that if we have one identifier in one database, we can use Wikidata to find other identifiers and use the full suite of identifiers to search the other database.
@@ -110,21 +112,21 @@ To access sequence data, queries were made to the [ENA portal API](https://www.e
 Different query approaches were tried. Initially, multiple queries were specified combining wild cards (*) and common terms associated with MeiseBG. For example, the internationally recognised herbarium code for the herbarium of Meise Botanic Garden is `BR` (see [Index Herbariorum](http://sweetgum.nybg.org/science/ih/)).
 The query values are listed below:
 
-|||
-|---|---|
-|`*br)*` | `*br-*`|
-|`*br:*` | `*meise*`|
-|`*br<*` | `*gard.*belg*`|
+||||
+|---|---|---|
+|`*br)*` || `*br-*`|
+|`*br:*` || `*meise*`|
+|`*br<*` || `*gard.*belg*`|
 
 
 These values mostly use the code `BR`, adding punctuation characters to omit false-positives as the API’s queries are not case sensitive. Nor does the ENA API support regular expressions. To work around this, a query was made for the more generic `*b*` (i.e. all sequences with a b in their specimen_voucher field). A more generic any value query for this field (i.e. `*`) was attempted, but came with performance issues (both at the API response and the local memory side) and was only successful too late in the Biohackathon for it to be used in the workflow described here (see section 1.2.2.). The exported results from this general `*b*` query were then mined using more specific regular expressions, including (other than those previously listed):
 
-`br[0-9]{13}`
-
-`br [0-9]{13}`
+||||
+|---|---|---|
+|`br[0-9]{13}`||`br [0-9]{13}`|
 
 These fit the pattern of MeiseBG specimen barcodes, which are used as catalogue numbers. Regular expressions were also used to eliminate some false-positives, in particular acronyms that contained BR but also contained other upper case characters (i.e. using negative grep for `[A-Z]BR`). A few sequences were found by the `*meise*` query, but not in the `*b*` query. These were added to the results from the mining approach of the `*b*` query. Using this method, an eventual result was obtained of ca. 8,398 sequences. 5,920 were left after eliminating the false-positives. Subsequently, for all of these results we attempted to identify collector numbers and collector names within the `specimen_voucher` string from ENA.
-## 2.2. Mining the results for specimen properties
+## 2.2 Mining the results for specimen properties
 The recommended format for [`specimen voucher`](https://www.ebi.ac.uk/ena/WebFeat/qualifiers/specimen_voucher.html) is a Darwin Core triplet of `institutionCode:collectionCode:id`, but this recommendation has not been followed in our institution. More often, beyond a reference to the institution as described above (i.e. BR or Meise), the specimen is only described through a combination of the name(s) of the person(s) who collected it and a number the collector generated. This (alpha)numeric identifier can be the so-called `collector number`, which is often given to a botanical specimen during the collection event or shortly after, to differentiate it from other specimens collected by the same individuals on the same date. The numeric identifier may also be the unique accession number that disambiguates the specimen from all others in the collection. It is not uncommon for this identifier to be only partially present in the `specimen_voucher` field. For example, the non-numeric part may be omitted or it may be stripped of leading zeroes. It is also not uncommon for multiple numeric identifiers to be present in the `specimen voucher` field.
 
 To match the numeric identifiers found in the ENA sequence metadata to numbers known for Meise’s herbarium specimens, the numbers were extracted by splitting the `specimen voucher` string into substrings divided by spaces. Out of each substring that contained at least one number, the numeric elements were extracted to avoid ambiguity through punctuation. For example, a `specimen_voucher` value of `De Block 6 (BR)(Meise 77-0360)` would result in two substrings of `6` and `770360`.
@@ -132,7 +134,7 @@ To match the numeric identifiers found in the ENA sequence metadata to numbers k
 To match person names, the surnames of persons listed in MeiseBG’s list of known collectors (see the data file `meise-coll.txt`) were matched into the whole `specimen_voucher` string. Any positive match was accepted and the persistent identifiers (PIDs) associated with that record in the collector list were linked to the ENA sequence metadata.
 
 Finally, the ENA provided `tax_id` - an [NCBI](https://www.ncbi.nlm.nih.gov/taxonomy/) taxon id - was matched to the [Global Biodiversity Information Facility](https://www.gbif.org/) (GBIF) backbone taxon ID using Wikidata as a broker [@10.15468/39omei]. This was done using a series of SPARQL queries. This way, the taxon names for ENA sequences could be unambiguously linked to taxon names for specimens in GBIF.
-## 2.3. Matching to specimen data
+## 2.3 Matching to specimen data
 Subsequently, a matching process was set up, where a positive link between a specimen published to GBIF and an ENA sequence was confirmed if there was a match between all of the following: 
 
 taxon ID on ENA and taxonKey in the GBIF Backbone
@@ -140,9 +142,9 @@ one of the numeric elements in the ENA `specimen_voucher` field and the numeric 
 one of the PIDs connected to the ENA record and `recordedByID` in GBIF. 
 
 GBIF has an [API](https://www.gbif.org/developer/summary), but the matching was performed locally using the GBIF-generated occurrence file of the Meise Botanic Garden Herbarium dataset [@10.15468/wrthhx]. This way, the overhead of using an API was avoided and manipulations such as extracting only numeric elements was possible.
-## 2.4. Human-in-the-loop verification of matches
+## 2.4 Human-in-the-loop verification of matches
 Candidate matches between sequences on GBIF and sequences on ENA were envisaged to be processed through an online application whereby a user could compare the metadata of the two entities. They would then confirm in the application that they agreed that both the sequence and the specimen had a common origin. During the Biohackathon a Django app was developed to demonstrate the possibility. Matches could be imported in a JSON format and combined with additional metadata from both ENA and GBIF to better inform the user. In the future, such an app could export validated matches in a standardized JSON format. This export could subsequently be used to annotate the GBIF records with their correct ENA sequence, or vice versa. 
-## 2.5. Update of Digital Specimens
+## 2.5 Update of Digital Specimens
 Voucher specimens can be represented digitally as a digital object (DO)[@10.3390/publications8020021]. A standard for such objects is currently under development within the [DiSSCo](https://www.dissco.eu) (Distributed System of Scientific Collections) research infrastructure, called [openDS](https://github.com/DiSSCo/openDS) (open digital specimen)[@10.3897/rio.6.e54280]. When sequences are successfully linked to specimens as outlined in this hackathon, these links can be represented as part of the DO. Publishing these links to the DO requires a standardized `UPDATE` operation through the Digital Object Interface Protocol (DOIP). The technological components of this DO infrastructure have not been fully developed, although a [demonstrator](https://nsidr.org) does exist where some specimens from MeiseBG herbarium are already present. In openDS, links could be modelled in multiple ways, as can be seen in figures 3 and 4. Only the first, specific schema is currently supported in the demonstrator. DOIP operations have also not been set up properly yet, so an effective demonstration was not yet feasible.
 
 ![Figure 3: Potential ENA enrichment schema, using a specific property for links to the ENA databases](data/enasequence.jpg "Specific ENA enrichment schema") 
