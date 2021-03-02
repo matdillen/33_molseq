@@ -71,15 +71,17 @@ Ultimately, these outcomes will help any collection connect its data better and 
 
 The [European Nucleotide Archive (ENA)](https://www.ebi.ac.uk/ena/browser/home) and other sequence databases follow standards such as [Minimum Information about any (x) Sequence (MIxS)](https://gensc.org/mixs/) created by the Genomic Standards Consortium. Specimen databases generally follow the standards, Darwin Core [@10.1371/journal.pone.0029715] or ABCD [@10.1080/11263504.2012.740085]. These standards define terms for the data that describe the sequence or specimen and their origins. However, many of these terms require only free text content and the terms do not necessarily map interoperably between standards. Our approach is to mine these text strings for related common elements in associated sequences and specimens and use our knowledge of our collections to link them together.
 
-For example, the Meise [herbarium](https://www.botanicalcollections.be) has been working towards connecting all the people associated with specimens, such as collectors and identifiers, to stable identifiers, such as [ORCID](https://orcid.org/) IDs [@10.1093/database/baaa072]. If we are able to match a person name in the metadata of a sequence to a stable identifier, such as an [ORCID](https://orcid.org/) ID, we can narrow the search of specimens and sequence considerably. We can also make use of the power of [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) as a broker of person identifiers, so that if we have one identifier in one database, we can use Wikidata to find other identifiers and use the full suite of identifiers to search the other database.
+For example, the Meise [herbarium](https://www.botanicalcollections.be) has been working towards connecting all the people associated with specimens, such as collectors and identifiers, to stable identifiers, such as [ORCID](https://orcid.org/) IDs [@10.1093/database/baaa072]. If we are able to match a person name in the metadata of a sequence to a stable identifier, such as an [ORCID](https://orcid.org/) ID, we can narrow the search of specimens and sequence considerably. We can also make use of the power of [Wikidata](https://www.wikidata.org/) as a broker of person identifiers, so that if we have one identifier in one database, we can use Wikidata to find other identifiers and use the full suite of identifiers to search the other database.
 
 Data on the specimens of Meise Botanic Garden can be accessed in various ways. There is a portal to the database where users can view high resolution pictures of specimens and download data ([botanicalcollections.be](https://www.botanicalcollections.be/)). However, for machine access to data the simplest entry point is the [Global Biodiversity Information Facility (GBIF)](https://www.gbif.org/). We made extensive use of the [GBIF API](https://www.gbif.org/developer/summary) in our workflow as it provides rapid access to data from hundreds of millions of specimens and to the unified GBIF Taxonomic Backbone [@10.15468/39omei].
 
-We also made use of [Wikidata](https://www.wikidata.org/wiki/Wikidata:Main_Page) as an information broker. Wikidata does not hold much data about molecular sequences or specimens, however it does hold many identifiers for other entities, such as people and taxa. This allows it to act as a bridge between those databases.
+We also made use of [Wikidata](https://www.wikidata.org/) as an information broker. Wikidata does not hold much data about molecular sequences or specimens, however it does hold many identifiers for other entities, such as people and taxa. This allows it to act as a bridge between those databases.
 
 ![Schema of the workflow](data/workflowschema.jpg "Schema of the workflow")
 
 Figure 1. A diagram of the connections between sequence databases (e.g. ENA) and specimens (GBIF). Sequences and specimens are often cited in literature and biological databases. These can be used as a source of accession numbers, locations, dates, person names and taxa with which sequence and specimen data can be linked. Wikidata can be used as a broker to link identifier schemes, such as taxon IDs. Even though candidate matches between sequences and specimens can be found uncertainty often remains. Therefore, we have foreseen a human verification step to confirm matches before the results are stored as a digital object that combines the results.
+
+Scripts and data used in this Biohackathon, as well as a Django app, can be found in the [github repository](https://github.com/elixir-europe/BioHackathon-projects-2020/tree/master/projects/33).
 
 ## 1.2 Other Approaches
 
@@ -102,7 +104,7 @@ A large dataset of around 6 million sequence records was mined from the ENA API 
 
 Figure 2: Presence and absence of data for sequences were assessed for a subset of 1M (random) sequences out of the 6M records. Only `specimen_voucher` and `tax_id` were always present, the former by constraints of the API query.
 
-The specimen_voucher field in ENA is intended to contain a triple of institution-code, collection-code and specimen_id (e.g. APM:BR:BR0000025959222V). When examining this larger dataset of accessions it became evident that the voucher_specimen was often populated with other identifying numbers in use within our botanic garden, though often in a non-standard format. Patterns we noticed included the removal of leading zeros, the appending of collector names to catalogue numbers, and the removal of other leading or trailing numbers. To compensate for these adaptations we tried a fuzzy matching technique by calculating the optimal string alignment distance between the values in the voucher_specimen field of the ENA data, and the catalogue numbers and record numbers published in our own dataset published on GBIF [@10.15468/dl.tfn5q2]. 
+The specimen_voucher field in ENA is intended to contain a triple of institution-code, collection-code and specimen_id (e.g. `APM:BR:BR0000025959222V`). When examining this larger dataset of accessions it became evident that the voucher_specimen was often populated with other identifying numbers in use within our botanic garden, though often in a non-standard format. Patterns we noticed included the removal of leading zeros, the appending of collector names to catalogue numbers, and the removal of other leading or trailing numbers. To compensate for these adaptations we tried a fuzzy matching technique by calculating the optimal string alignment distance between the values in the voucher_specimen field of the ENA data, and the catalogue numbers and record numbers published in our own dataset published on GBIF [@10.15468/dl.tfn5q2]. 
 
 When only accounting for the removal of maximum two digits, the algorithm resulted in several orders of magnitude more matches between ENA records and GBIF records than non-fuzzy matching between the same datasets (see section 2), however, further inspection revealed a high false-positive rate. This method shows promise, but requires significant fine tuning and further processing to make it effective.
 
@@ -114,7 +116,7 @@ The digital notebooks of the Botanic Garden’s laboratory include information r
 
 ## 2.1. Finding candidate sequences
 
-To access sequence data, queries were made to the [ENA portal API](https://www.ebi.ac.uk/ena/portal/api/) attempting to select sequence records potentially related to voucher specimens from the herbarium collection of [Meise Botanic Garden](https://www.botanicalcollections.be/#/en/home) (MeiseBG). ENA also contains data on samples that sequences have been derived from, but similar searches to those conducted on sequences resulted in far fewer results for samples. Most sequences (98%) appeared unassociated with samples, because the sample_accession field of the sequence was empty. We focused on those sequences with the `specimen_voucher` data field populated. Other fields like `description` threw many false positives with our querying approach and rarely contained identifiers of interest. All query work was done in R, a script called `bh-apicalls.R` available in this repository.
+To access sequence data, queries were made to the [ENA portal API](https://www.ebi.ac.uk/ena/portal/api/) attempting to select sequence records potentially related to voucher specimens from the herbarium collection of [Meise Botanic Garden](https://www.botanicalcollections.be) (MeiseBG). ENA also contains data on samples that sequences have been derived from, but similar searches to those conducted on sequences resulted in far fewer results for samples. Most sequences (98%) appeared unassociated with samples, because the sample_accession field of the sequence was empty. We focused on those sequences with the `specimen_voucher` data field populated. Other fields like `description` threw many false positives with our querying approach and rarely contained identifiers of interest. All query work was done in R, a script called `bh-apicalls.R` available in this repository.
 
 Different query approaches were tried. Initially, multiple queries were specified combining wild cards (*) and common terms associated with MeiseBG. For example, the internationally recognised herbarium code for the herbarium of Meise Botanic Garden is `BR` (see [Index Herbariorum](http://sweetgum.nybg.org/science/ih/)).
 The query values are listed below:
@@ -180,17 +182,20 @@ Ultimately, a much better process would be if specimens and sequence were linked
 
 Based upon our experiences during the Biohackathon-Europe 2020 we make several recommendations to improve the current situation. Nevertheless, these recommendations would take some considerable effort to implement and disseminate, therefore they need prioritization by institutions.
 
-For INSDC partner databases
+## For INSDC partner databases
+
 Databases should incorporate PIDs into their data model for…
-people (i.e. [ORCID](https://orcid.org/))
-institutions (i.e. [ROR](https://ror.org/scope))
-publications (i.e. [DOI](https://www.doi.org/))
-and specimens [@10.1093/database/bax003].
-For collections
-Scientists depositing sequence data should be given training on the data model and standards used.
-Collections should make more effort to reconnect their backlog of voucher specimens to their sequences.
-Specimens should obtain a PID at the earliest point possible upon collection and certainly before tissue collection for sequencing.
-Novel data encapsulation approaches are needed to ensure that the links between these data can be transversed by people and by machines.
+* people (i.e. [ORCID](https://orcid.org/))
+* institutions (i.e. [ROR](https://ror.org/scope))
+* publications (i.e. [DOI](https://www.doi.org/))
+* and specimens [@10.1093/database/bax003]
+
+## For collections
+
+* Scientists depositing sequence data should be given training on the data model and standards used.
+* Collections should make more effort to reconnect their backlog of voucher specimens to their sequences.
+* Specimens should obtain a PID at the earliest point possible upon collection and certainly before tissue collection for sequencing.
+* Novel data encapsulation approaches are needed to ensure that the links between these data can be transversed by people and by machines.
 
 # 5. Acknowledgements
 
