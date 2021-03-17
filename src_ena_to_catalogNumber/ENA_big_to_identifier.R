@@ -13,7 +13,7 @@ ENA_poss <- fread(file.path("../33_molseq", "data", "brpossibles.txt"))
 
 # create visualization of available data ---------------------------------
 
-ENA_big_all[sample(.N, 100000)] %>%
+ENA_big_all[sample(.N, 1000000)] %>%
   select(-c(
     "accession",
     "description",
